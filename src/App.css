@@ -1,0 +1,14 @@
+#root {
+	display: flex;
+	flex-direction: column;
+	place-items: center;
+
+	margin: 0 auto;
+	padding: 1.5rem;
+	text-align: center;
+	width: 100%;
+}
+
+table {
+	width: 100%;
+}
