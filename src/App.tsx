@@ -9,6 +9,7 @@ function App() {
 	const [users, setUsers] = React.useState<User[]>([])
 	const [showColors, setShowColors] = React.useState(false)
 	const [sortByCountry, setSortByCountry] = React.useState(false)
+	const [filter, setFilter] = React.useState<string | null>(null)
 	const originalUser = React.useRef<User[]>([])
 
 	React.useEffect(() => {
@@ -26,11 +27,23 @@ function App() {
 		setSortByCountry(!sortByCountry)
 	}
 
-	const sortedUsers = sortByCountry
-		? [...users].sort((a, b) =>
-				a.location.country.localeCompare(b.location.country)
-		  )
-		: users
+	const filteredCountry = React.useMemo(() => {
+		console.log('filtering')
+		return filter !== null && filter.length > 0
+			? users.filter(user =>
+					user.location.country.toLowerCase().includes(filter.toLowerCase())
+			  )
+			: users
+	}, [filter, users])
+
+	const sortedUsers = React.useMemo(() => {
+		console.log('sorting')
+		return sortByCountry
+			? [...filteredCountry].sort((a, b) =>
+					a.location.country.localeCompare(b.location.country)
+			  )
+			: filteredCountry
+	}, [sortByCountry, filteredCountry])
 
 	const handleDelete = (email: string) => {
 		const newUsers = users.filter(user => user.email !== email)
@@ -50,6 +63,11 @@ function App() {
 				</button>
 				<button onClick={toggleSortByCountry}>Ordenar por pais</button>
 				<button onClick={handleRestore}>Restaurar estado original</button>
+				<input
+					type='text'
+					// value={filter}
+					onChange={e => setFilter(e.target.value)}
+				/>
 			</header>
 			<main>
 				<UserList
