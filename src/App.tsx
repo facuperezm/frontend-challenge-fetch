@@ -9,6 +9,7 @@ function App() {
 	const [users, setUsers] = React.useState<User[]>([])
 	const [showColors, setShowColors] = React.useState(false)
 	const [sortByCountry, setSortByCountry] = React.useState(false)
+	const originalUser = React.useRef<User[]>([])
 
 	React.useEffect(() => {
 		fetch(URL)
@@ -16,6 +17,7 @@ function App() {
 			.then(data => {
 				setUsers(data.results)
 				setSortByCountry(data.results)
+				originalUser.current = data.results
 			})
 			.catch(err => console.error(err))
 	}, [])
@@ -35,6 +37,10 @@ function App() {
 		setUsers(newUsers)
 	}
 
+	const handleRestore = () => {
+		setUsers(originalUser.current)
+	}
+
 	return (
 		<>
 			<h1>Frontend Challenge</h1>
@@ -43,6 +49,7 @@ function App() {
 					Cambiar color
 				</button>
 				<button onClick={toggleSortByCountry}>Ordenar por pais</button>
+				<button onClick={handleRestore}>Restaurar estado original</button>
 			</header>
 			<main>
 				<UserList

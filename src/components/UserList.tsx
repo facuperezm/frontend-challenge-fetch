@@ -31,7 +31,7 @@ export function UserList({ users, showColors, handleDelete }: Props) {
 							<td>{user.name.last}</td>
 							<td>{user.location.country}</td>
 							<td>
-								<button onClick={handleDelete}>Delete</button>
+								<button onClick={() => handleDelete(user.email)}>Delete</button>
 							</td>
 						</tr>
 					)
