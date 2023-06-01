@@ -1,6 +1,7 @@
 import React from 'react'
 import './App.css'
-import { User } from './types'
+import { type User } from './types.d'
+import { SortBy } from './types.d'
 import { UserList } from './components/UserList'
 
 const URL = `https://randomuser.me/api/?results=100`
@@ -10,6 +11,7 @@ function App() {
 	const [showColors, setShowColors] = React.useState(false)
 	const [sortByCountry, setSortByCountry] = React.useState(false)
 	const [filter, setFilter] = React.useState<string | null>(null)
+	const [sorting, setSorting] = React.useState<SortBy>(SortBy.NONE)
 	const originalUser = React.useRef<User[]>([])
 
 	React.useEffect(() => {
@@ -28,7 +30,6 @@ function App() {
 	}
 
 	const filteredCountry = React.useMemo(() => {
-		console.log('filtering')
 		return filter !== null && filter.length > 0
 			? users.filter(user =>
 					user.location.country.toLowerCase().includes(filter.toLowerCase())
@@ -37,13 +38,20 @@ function App() {
 	}, [filter, users])
 
 	const sortedUsers = React.useMemo(() => {
-		console.log('sorting')
-		return sortByCountry
-			? [...filteredCountry].sort((a, b) =>
-					a.location.country.localeCompare(b.location.country)
-			  )
-			: filteredCountry
-	}, [sortByCountry, filteredCountry])
+		if (sorting === SortBy.NONE) return filteredCountry
+		if (sorting === SortBy.COUNTRY)
+			return [...filteredCountry].sort((a, b) =>
+				a.location.country.localeCompare(b.location.country)
+			)
+		if (sorting === SortBy.FIRST)
+			return [...filteredCountry].sort((a, b) =>
+				a.name.first.localeCompare(b.name.first)
+			)
+		if (sorting === SortBy.LAST)
+			return [...filteredCountry].sort((a, b) =>
+				a.name.last.localeCompare(b.name.last)
+			)
+	}, [sorting, filteredCountry])
 
 	const handleDelete = (email: string) => {
 		const newUsers = users.filter(user => user.email !== email)
@@ -71,6 +79,7 @@ function App() {
 			</header>
 			<main>
 				<UserList
+					changeSorting={setSorting}
 					users={sortedUsers}
 					showColors={showColors}
 					handleDelete={handleDelete}
