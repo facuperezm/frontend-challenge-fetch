@@ -51,6 +51,7 @@ function App() {
 			return [...filteredCountry].sort((a, b) =>
 				a.name.last.localeCompare(b.name.last)
 			)
+		return filteredCountry
 	}, [sorting, filteredCountry])
 
 	const handleDelete = (email: string) => {
