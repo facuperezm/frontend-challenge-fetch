@@ -10,3 +10,11 @@
 table {
 	width: 100%;
 }
+
+header {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 2rem;
+}
