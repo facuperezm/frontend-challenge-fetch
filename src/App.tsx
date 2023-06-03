@@ -1,50 +1,15 @@
 import React from 'react'
 import './App.css'
-import { type User } from './types.d'
 import { SortBy } from './types.d'
 import { UserList } from './components/UserList'
-import { useInfiniteQuery } from 'react-query'
-
-const fetchUsers = async ({ pageParam = 1 }: { pageParam?: number }) => {
-	return await fetch(
-		`https://randomuser.me/api?results=10&seed=abc&page=${pageParam}`
-	)
-		.then(async res => {
-			if (!res.ok)
-				throw new Error(`Error fetching users: ${res.status} ${res.statusText}`)
-			return await res.json()
-		})
-		.then(res => {
-			const nextCursor = Number(res.info.page + 1)
-
-			return {
-				users: res.results,
-				nextCursor
-			}
-		})
-}
+import { useUsers } from './hooks/useUsers'
 
 function App() {
-	const [showColors, setShowColors] = React.useState(false)
+	const { isLoading, isError, users, refetch, fetchNextPage } = useUsers()
 
+	const [showColors, setShowColors] = React.useState(false)
 	const [filter, setFilter] = React.useState<string | null>(null)
 	const [sorting, setSorting] = React.useState<SortBy>(SortBy.NONE)
-
-	const { isLoading, isError, data, refetch, fetchNextPage, hasNextPage } =
-		useInfiniteQuery<{ nextCursor?: number; users: User[] }>(
-			['users'],
-			fetchUsers,
-			{
-				getNextPageParam: lastPage => lastPage.nextCursor,
-				refetchOnWindowFocus: false,
-				staleTime: 1000 * 3
-			}
-		)
-
-	console.log(data, 'this is data')
-	console.log(hasNextPage, 'this is hasNextPage')
-
-	const users: User[] = data?.pages?.flatMap(page => page.users) ?? []
 
 	const filteredCountry = React.useMemo(() => {
 		return filter !== null && filter.length > 0
@@ -72,7 +37,7 @@ function App() {
 	}, [sorting, filteredCountry])
 
 	const handleDelete = (email: string) => {
-		const newUsers = users.filter(user => user.email !== email)
+		// const newUsers = users.filter(user => user.email !== email)
 		// setUsers(newUsers)
 	}
 
