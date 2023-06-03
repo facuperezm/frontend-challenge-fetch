@@ -3,39 +3,48 @@ import './App.css'
 import { type User } from './types.d'
 import { SortBy } from './types.d'
 import { UserList } from './components/UserList'
-import { useQuery } from 'react-query'
+import { useInfiniteQuery } from 'react-query'
 
-const fetchUsers = async (page: number) => {
+const fetchUsers = async ({ pageParam = 1 }: { pageParam?: number }) => {
 	return await fetch(
-		`https://randomuser.me/api?results=10&seed=abc&page=${page}`
+		`https://randomuser.me/api?results=10&seed=abc&page=${pageParam}`
 	)
 		.then(async res => {
 			if (!res.ok)
 				throw new Error(`Error fetching users: ${res.status} ${res.statusText}`)
 			return await res.json()
 		})
-		.then(data => data.results)
-		.catch(err => console.error(err))
+		.then(res => {
+			const nextCursor = Number(res.info.page + 1)
+
+			return {
+				users: res.results,
+				nextCursor
+			}
+		})
 }
 
 function App() {
-	// const [users, setUsers] = React.useState<User[]>([])
 	const [showColors, setShowColors] = React.useState(false)
-	const [sortByCountry, setSortByCountry] = React.useState(false)
+
 	const [filter, setFilter] = React.useState<string | null>(null)
 	const [sorting, setSorting] = React.useState<SortBy>(SortBy.NONE)
-	const [currentPage, setCurrentPage] = React.useState(1)
-	const originalUser = React.useRef<User[]>([])
 
-	const {
-		isLoading,
-		isError,
-		data: users = []
-	} = useQuery<User[]>('users', async () => fetchUsers(currentPage))
+	const { isLoading, isError, data, refetch, fetchNextPage, hasNextPage } =
+		useInfiniteQuery<{ nextCursor?: number; users: User[] }>(
+			['users'],
+			fetchUsers,
+			{
+				getNextPageParam: lastPage => lastPage.nextCursor,
+				refetchOnWindowFocus: false,
+				staleTime: 1000 * 3
+			}
+		)
 
-	const toggleSortByCountry = () => {
-		setSortByCountry(!sortByCountry)
-	}
+	console.log(data, 'this is data')
+	console.log(hasNextPage, 'this is hasNextPage')
+
+	const users: User[] = data?.pages?.flatMap(page => page.users) ?? []
 
 	const filteredCountry = React.useMemo(() => {
 		return filter !== null && filter.length > 0
@@ -64,11 +73,11 @@ function App() {
 
 	const handleDelete = (email: string) => {
 		const newUsers = users.filter(user => user.email !== email)
-		setUsers(newUsers)
+		// setUsers(newUsers)
 	}
 
 	const handleRestore = () => {
-		setUsers(originalUser.current)
+		refetch()
 	}
 
 	return (
@@ -78,13 +87,8 @@ function App() {
 				<button onClick={() => setShowColors(!showColors)}>
 					Cambiar color
 				</button>
-				<button onClick={toggleSortByCountry}>Ordenar por pais</button>
 				<button onClick={handleRestore}>Restaurar estado original</button>
-				<input
-					type='text'
-					// value={filter}
-					onChange={e => setFilter(e.target.value)}
-				/>
+				<input type='text' onChange={e => setFilter(e.target.value)} />
 			</header>
 			<main>
 				{users.length > 0 && (
@@ -109,7 +113,7 @@ function App() {
 				)} */}
 
 				{!isLoading && !isError && users.length > 0 && (
-					<button onClick={() => setCurrentPage(currentPage + 1)}>
+					<button onClick={() => void fetchNextPage()}>
 						Cargar más resultados
 					</button>
 				)}
